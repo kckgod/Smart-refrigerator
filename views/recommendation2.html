@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>레시피 검색</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+
+        :root {
+            --primary-color: #2196F3;
+            --success-color: #4CAF50;
+            --warning-color: #FFC107;
+            --danger-color: #FF5252;
+            --background-color: #F8FAFC;
+            --card-background: #FFFFFF;
+            --text-primary: #1A1A1A;
+            --text-secondary: #666666;
+            --border-radius: 16px;
+            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+            --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body,
+        html {
+            font-family: 'Pretendard', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1364px;
+            margin: 0 auto;
+            padding: 24px;
+            min-height: 100vh;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            background: var(--card-background);
+            padding: 20px 32px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-md);
+        }
+
+        .time {
+            font-size: 3.2em;
+            font-weight: 700;
+            color: var(--primary-color);
+            letter-spacing: -1px;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .header-button {
+            background: var(--card-background);
+            color: var(--text-primary);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            padding: 12px 20px;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            font-size: 0.95em;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .header-button:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+        }
+
+        .card {
+            background: var(--card-background);
+            border-radius: var(--border-radius);
+            padding: 24px;
+            box-shadow: var(--shadow-md);
+            transition: all 0.3s ease;
+            height: 600px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .card-title {
+            font-size: 1.4em;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .search-container {
+            position: relative;
+            margin-bottom: 24px;
+        }
+
+        .search-container input {
+            width: 100%;
+            padding: 16px 48px 16px 20px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: var(--border-radius);
+            font-size: 1em;
+            transition: all 0.2s ease;
+            background: var(--background-color);
+            color: var(--text-primary);
+        }
+
+        .search-container input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: auto;
+        }
+
+        .action-button {
+            flex: 1;
+            padding: 12px 20px;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            font-size: 0.95em;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        #searchButton {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+        }
+
+        #searchButton:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+            background: #1976D2;
+        }
+
+        button[onclick*="recommendation"] {
+            background: var(--card-background);
+            color: var(--text-primary);
+        }
+
+        button[onclick*="recommendation"]:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        #recipeInfo {
+            flex: 1;
+            overflow-y: auto;
+            background: var(--card-background);
+            border-radius: var(--border-radius);
+            padding: 0;
+        }
+
+        .recipe-section {
+            background: white;
+            padding: 24px;
+            margin-bottom: 16px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .recipe-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .recipe-title {
+            font-size: 1.8em;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid rgba(33, 150, 243, 0.1);
+        }
+
+        .recipe-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .info-item {
+            background: rgba(33, 150, 243, 0.05);
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .info-label {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+            margin-bottom: 4px;
+        }
+
+        .info-value {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .ingredient-tag {
+            display: inline-block;
+            background: rgba(33, 150, 243, 0.1);
+            color: var(--primary-color);
+            padding: 6px 12px;
+            border-radius: 20px;
+            margin: 4px;
+            font-size: 0.9em;
+        }
+
+        .recipe-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            padding: 16px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .recipe-step:last-child {
+            border-bottom: none;
+        }
+
+        .step-number {
+            background: var(--primary-color);
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9em;
+            flex-shrink: 0;
+        }
+
+        .section-title {
+            color: var(--primary-color);
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--background-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            .header-buttons {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="time" id="currentTime">00:00</div>
+            <div class="header-buttons">
+                <button class="header-button" onclick="location.href='/home'">
+                    <i class="fas fa-home"></i>메인
+                </button>
+                <button class="header-button" onclick="location.href='/products'">
+                    <i class="fas fa-box"></i>상품관리
+                </button>
+                <button class="header-button" onclick="location.href='/oder'">
+                    <i class="fas fa-shopping-cart"></i>상품주문
+                </button>
+                <button class="header-button" onclick="location.href='/profile'">
+                    <i class="fas fa-user"></i>프로필
+                </button>
+            </div>
+        </header>
+
+        <div class="content">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-search" style="color: var(--primary-color); font-size: 1.4em;"></i>
+                    <h2 class="card-title">레시피 검색</h2>
+                </div>
+                <div class="search-container">
+                    <input type="text" id="recipeName" placeholder="레시피 이름을 입력하세요">
+                    <i class="fas fa-search search-icon"></i>
+                </div>
+                <div class="button-group">
+                    <button id="searchButton" class="action-button">
+                        <i class="fas fa-search"></i>검색
+                    </button>
+                    <button onclick="location.href='/recommendation'" class="action-button">
+                        <i class="fas fa-carrot"></i>재료로 찾기
+                    </button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-book-open" style="color: var(--primary-color); font-size: 1.4em;"></i>
+                    <h2 class="card-title">검색 결과</h2>
+                </div>
+                <div id="recipeInfo">
+                    <div style="padding: 24px; color: var(--text-secondary);">
+                        레시피 이름을 입력하고 검색 버튼을 클릭하면 레시피가 표시됩니다.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function updateTime() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('currentTime').textContent = `${hours}:${minutes}`;
+        }
+
+        updateTime();
+        setInterval(updateTime, 60000);
+
+        function formatIngredients(ingredients) {
+            return ingredients.split(',').map(ingredient =>
+                `<span class="ingredient-tag">${ingredient.trim()}</span>`
+            ).join('');
+        }
+
+        function formatRecipeSteps(steps) {
+            return steps.map((step, index) => {
+                // 숫자와 뒤따르는 . 또는 ) 제거
+                const cleanStep = step.replace(/^\d+[\.\)]\s*/, '');
+                return `
+                    <div class="recipe-step">
+                        <div class="step-number">${index + 1}</div>
+                        <div class="step-content">${cleanStep}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        document.getElementById('searchButton').addEventListener('click', async () => {
+            const recipeName = document.getElementById('recipeName').value;
+            const recipeInfoDiv = document.getElementById('recipeInfo');
+
+            if (!recipeName.trim()) {
+                recipeInfoDiv.innerHTML = `
+                    <div style="padding: 24px; color: var(--danger-color);">
+                        <i class="fas fa-exclamation-circle"></i> 레시피 이름을 입력해주세요.
+                    </div>
+                `;
+                return;
+            }
+
+            recipeInfoDiv.innerHTML = `
+                <div style="padding: 24px; color: var(--text-secondary);">
+                    <i class="fas fa-spinner fa-spin"></i> 레시피를 검색하고 있습니다...
+                </div>
+            `;
+
+            try {
+                const response = await fetch(`/api/recipe?name=${encodeURIComponent(recipeName)}`);
+
+                if (response.ok) {
+                    const data = await response.json();
+                    recipeInfoDiv.innerHTML = `
+                        <div class="recipe-section">
+                            <h1 class="recipe-title">${data.name}</h1>
+                            <div class="recipe-info">
+                                <div class="info-item">
+                                    <div class="info-label">난이도</div>
+                                    <div class="info-value">보통</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">소요시간</div>
+                                    <div class="info-value">30분</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">분량</div>
+                                    <div class="info-value">2인분</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="recipe-section">
+                            <div class="section-title">
+                                <i class="fas fa-carrot"></i>필요한 재료
+                            </div>
+                            <div style="line-height: 2;">
+                                ${formatIngredients(data.ingredients)}
+                            </div>
+                        </div>
+
+                        <div class="recipe-section">
+                            <div class="section-title">
+                                <i class="fas fa-list-ol"></i>조리 순서
+                            </div>
+                            ${formatRecipeSteps(data.recipe)}
+                        </div>
+
+                        <div class="recipe-section">
+                            <div class="section-title">
+                                <i class="fas fa-lightbulb"></i>조리 팁
+                            </div>
+                            <p>재료의 신선도를 확인하고 위생적으로 조리하세요. 입맛에 따라 간을 조절해주세요.</p>
+                        </div>
+                    `;
+                } else {
+                    recipeInfoDiv.innerHTML = `
+                        <div class="recipe-section" style="text-align: center; color: var(--text-secondary);">
+                            <i class="fas fa-search" style="font-size: 2em; margin-bottom: 16px; color: var(--primary-color);"></i>
+                            <p>${await response.text()}</p>
+                            <p style="margin-top: 8px; font-size: 0.9em;">다른 레시피 이름으로 다시 검색해보세요.</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                recipeInfoDiv.innerHTML = `
+                    <div class="recipe-section" style="text-align: center; color: var(--danger-color);">
+                        <i class="fas fa-exclamation-circle" style="font-size: 2em; margin-bottom: 16px;"></i>
+                        <p>레시피 검색 중 오류가 발생했습니다.</p>
+                        <p style="margin-top: 8px; font-size: 0.9em;">잠시 후 다시 시도해주세요.</p>
+                    </div>
+                `;
+            }
+        });
+
+        document.getElementById('recipeName').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('searchButton').click();
+            }
+        });
+    </script>
+</body>
+
+</html>

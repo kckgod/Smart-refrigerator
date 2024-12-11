@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>레시피 추천</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+
+        :root {
+            --primary-color: #2196F3;
+            --success-color: #4CAF50;
+            --warning-color: #FFC107;
+            --danger-color: #FF5252;
+            --background-color: #F8FAFC;
+            --card-background: #FFFFFF;
+            --text-primary: #1A1A1A;
+            --text-secondary: #666666;
+            --border-radius: 16px;
+            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+            --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body,
+        html {
+            font-family: 'Pretendard', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1364px;
+            margin: 0 auto;
+            padding: 24px;
+            min-height: 100vh;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            background: var(--card-background);
+            padding: 20px 32px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-md);
+        }
+
+        .time {
+            font-size: 3.2em;
+            font-weight: 700;
+            color: var(--primary-color);
+            letter-spacing: -1px;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .header-button {
+            background: var(--card-background);
+            color: var(--text-primary);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            padding: 12px 20px;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            font-size: 0.95em;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .header-button:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+        }
+
+        .card {
+            background: var(--card-background);
+            border-radius: var(--border-radius);
+            padding: 24px;
+            box-shadow: var(--shadow-md);
+            transition: all 0.3s ease;
+            height: 600px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .card-title {
+            font-size: 1.4em;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        #ingredientsList {
+            flex: 1;
+            overflow-y: auto;
+            background: var(--background-color);
+            border-radius: var(--border-radius);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+        }
+
+        .ingredient-item {
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            transition: background-color 0.2s ease;
+        }
+
+        .ingredient-item:last-child {
+            border-bottom: none;
+        }
+
+        .ingredient-item:hover {
+            background: rgba(33, 150, 243, 0.05);
+        }
+
+        .ingredient-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary-color);
+        }
+
+        .ingredient-item label {
+            font-size: 1em;
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+        }
+
+        .action-button {
+            flex: 1;
+            padding: 12px 20px;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            font-size: 0.95em;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        #recommendButton {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+        }
+
+        #recommendButton:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+            background: #1976D2;
+        }
+
+        button[onclick*="recommendation2"] {
+            background: var(--card-background);
+            color: var(--text-primary);
+        }
+
+        button[onclick*="recommendation2"]:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .recipe-result {
+            padding: 20px;
+        }
+
+        .recipe-section {
+            margin-bottom: 24px;
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .recipe-section:first-child {
+            background: linear-gradient(to bottom, rgba(33, 150, 243, 0.05), white);
+        }
+
+        .recipe-title-container {
+            text-align: center;
+            margin-bottom: 24px;
+            padding: 20px 0;
+            border-bottom: 2px solid rgba(33, 150, 243, 0.1);
+        }
+
+        .recipe-prefix {
+            color: var(--primary-color);
+            font-size: 0.9em;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .recipe-intro {
+            font-size: 1.4em;
+            font-weight: 500;
+            color: var(--text-primary);
+            letter-spacing: -0.5px;
+            line-height: 1.5;
+            margin: 16px 0;
+            text-align: center;
+        }
+
+        .recipe-intro strong {
+            color: var(--primary-color);
+            font-weight: 700;
+        }
+
+        .recipe-section-title {
+            color: var(--primary-color);
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .ingredient-tag {
+            display: inline-block;
+            background: rgba(33, 150, 243, 0.1);
+            color: var(--primary-color);
+            padding: 4px 12px;
+            border-radius: 20px;
+            margin: 4px;
+            font-size: 0.9em;
+        }
+
+        .recipe-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .recipe-step:last-child {
+            border-bottom: none;
+        }
+
+        .step-number {
+            background: var(--primary-color);
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9em;
+            flex-shrink: 0;
+        }
+
+        .step-content {
+            flex: 1;
+            line-height: 1.6;
+        }
+
+        .cooking-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .info-item {
+            background: rgba(33, 150, 243, 0.05);
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .info-label {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+            margin-bottom: 4px;
+        }
+
+        .info-value {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        #recipeInfo {
+            flex: 1;
+            overflow-y: auto;
+            background: var(--card-background);
+            border-radius: var(--border-radius);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            line-height: 1.8;
+            color: var(--text-primary);
+            padding: 0;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--background-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            .header-buttons {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="time" id="currentTime">00:00</div>
+            <div class="header-buttons">
+                <button class="header-button" onclick="location.href='/home'">
+                    <i class="fas fa-home"></i>메인
+                </button>
+                <button class="header-button" onclick="location.href='/products'">
+                    <i class="fas fa-box"></i>상품관리
+                </button>
+                <button class="header-button" onclick="location.href='/oder'">
+                    <i class="fas fa-shopping-cart"></i>상품주문
+                </button>
+                <button class="header-button" onclick="location.href='/profile'">
+                    <i class="fas fa-user"></i>프로필
+                </button>
+            </div>
+        </header>
+
+        <div class="content">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-carrot" style="color: var(--primary-color); font-size: 1.4em;"></i>
+                    <h2 class="card-title">사용 가능한 재료 선택하기</h2>
+                </div>
+                <div id="ingredientsList"></div>
+                <div class="button-group">
+                    <button id="recommendButton" class="action-button">
+                        <i class="fas fa-magic"></i>AI 추천검색
+                    </button>
+                    <button onclick="location.href='/recommendation2'" class="action-button">
+                        <i class="fas fa-search"></i>직접 레시피검색
+                    </button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-utensils" style="color: var(--primary-color); font-size: 1.4em;"></i>
+                    <h2 class="card-title">추천 레시피</h2>
+                </div>
+                <div id="recipeInfo">
+                    재료를 선택하고 AI 추천검색 버튼을 클릭하면 레시피가 표시됩니다.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function updateTime() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('currentTime').textContent = `${hours}:${minutes}`;
+        }
+
+        updateTime();
+        setInterval(updateTime, 60000);
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const ingredientsList = document.getElementById('ingredientsList');
+            const recommendButton = document.getElementById('recommendButton');
+            const recipeInfo = document.getElementById('recipeInfo');
+
+            async function loadIngredients() {
+                try {
+                    const response = await fetch('/api/available-ingredients');
+                    if (!response.ok) {
+                        throw new Error('재료 목록을 가져오는데 실패했습니다.');
+                    }
+                    const ingredients = await response.json();
+
+                    ingredientsList.innerHTML = '';
+                    ingredients.forEach(ingredient => {
+                        const itemDiv = document.createElement('div');
+                        itemDiv.className = 'ingredient-item';
+
+                        const checkbox = document.createElement('input');
+                        checkbox.type = 'checkbox';
+                        checkbox.id = ingredient;
+                        checkbox.value = ingredient;
+
+                        const label = document.createElement('label');
+                        label.htmlFor = ingredient;
+                        label.textContent = ingredient;
+
+                        itemDiv.appendChild(checkbox);
+                        itemDiv.appendChild(label);
+                        ingredientsList.appendChild(itemDiv);
+                    });
+                } catch (error) {
+                    console.error('Error:', error);
+                    ingredientsList.innerHTML = `<p>재료 목록을 불러오는데 실패했습니다: ${error.message}</p>`;
+                }
+            }
+
+            loadIngredients();
+
+            async function generateStructuredRecipe(ingredients) {
+                try {
+                    const response = await fetch('/api/recommend-recipe', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ ingredients }),
+                    });
+
+                    if (!response.ok) throw new Error('레시피 추천에 실패했습니다.');
+                    const data = await response.json();
+
+                    // 선택된 재료들을 강조하는 함수
+                    function highlightIngredients(text, selectedIngredients) {
+                        let highlightedText = text;
+                        selectedIngredients.forEach(ingredient => {
+                            const regex = new RegExp(ingredient, 'g');
+                            highlightedText = highlightedText.replace(regex, `<strong>${ingredient}</strong>`);
+                        });
+                        return highlightedText;
+                    }
+
+                    // AI 응답의 첫 번째 줄만 사용
+                    const firstLine = data.recipe.split('\n')[0].trim();
+
+                    return `
+                        <div class="recipe-result">
+                            <div class="recipe-section">
+                                <div class="recipe-title-container">
+                                    <div class="recipe-prefix">AI의 추천레시피</div>
+                                    <div class="recipe-intro">${highlightIngredients(firstLine, ingredients)}</div>
+                                </div>
+                                <div class="cooking-info">
+                                    <div class="info-item">
+                                        <div class="info-label">조리시간</div>
+                                        <div class="info-value">약 30분</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <div class="info-label">난이도</div>
+                                        <div class="info-value">보통</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <div class="info-label">분량</div>
+                                        <div class="info-value">2인분</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="recipe-section">
+                                <div class="recipe-section-title">
+                                    <i class="fas fa-carrot"></i>필요한 재료
+                                </div>
+                                <div style="line-height: 2;">
+                                    ${data.recipe.split('\n')
+                                        .filter(line => line.includes('재료:'))
+                                        .join('')
+                                        .replace('재료:', '')
+                                        .split(',')
+                                        .map(ing => `<span class="ingredient-tag">${ing.trim()}</span>`)
+                                        .join('')}
+                                </div>
+                            </div>
+
+                            <div class="recipe-section">
+                                <div class="recipe-section-title">
+                                    <i class="fas fa-list-ol"></i>조리 순서
+                                </div>
+                                ${data.recipe.split('\n')
+                                    .filter(line => /^\d+[\.\)]/.test(line))
+                                    .map((step, index) => `
+                                        <div class="recipe-step">
+                                            <div class="step-number">${index + 1}</div>
+                                            <div class="step-content">${step.replace(/^\d+[\.\)]/, '').trim()}</div>
+                                        </div>
+                                    `).join('')}
+                            </div>
+
+                            <div class="recipe-section">
+                                <div class="recipe-section-title">
+                                    <i class="fas fa-lightbulb"></i>조리 팁
+                                </div>
+                                ${data.recipe.split('\n')
+                                    .filter(line => line.includes('팁:') || line.includes('tip:'))
+                                    .map(tip => tip.replace(/팁:|tip:/i, '').trim())
+                                    .join('') || '맛있는 요리 되세요!'}
+                            </div>
+                        </div>
+                    `;
+                } catch (error) {
+                    throw error;
+                }
+            }
+
+            recommendButton.addEventListener('click', async () => {
+                const selectedIngredients = Array.from(document.querySelectorAll('input:checked')).map(input => input.value);
+
+                if (selectedIngredients.length === 0) {
+                    alert('최소한 하나의 재료를 선택해주세요.');
+                    return;
+                }
+
+                const recipeInfo = document.getElementById('recipeInfo');
+                recipeInfo.innerHTML = '<div style="padding: 20px;">레시피를 생성하고 있습니다...</div>';
+
+                try {
+                    const recipeHTML = await generateStructuredRecipe(selectedIngredients);
+                    recipeInfo.innerHTML = recipeHTML;
+                } catch (error) {
+                    recipeInfo.innerHTML = `
+                        <div style="padding: 20px; color: var(--danger-color);">
+                            <i class="fas fa-exclamation-circle"></i>
+                            레시피 생성 중 오류가 발생했습니다: ${error.message}
+                        </div>
+                    `;
+                }
+            });
+        });
+    </script>
+</body>
+</html>

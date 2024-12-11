@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>스마트 냉장고</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+
+        :root {
+            --primary-color: #2196F3;
+            --success-color: #4CAF50;
+            --warning-color: #FFC107;
+            --danger-color: #FF5252;
+            --background-color: #F8FAFC;
+            --card-background: #FFFFFF;
+            --text-primary: #1A1A1A;
+            --text-secondary: #666666;
+            --border-radius: 16px;
+            --scroll-color: #cecece;
+            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+            --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body,
+        html {
+            font-family: 'Pretendard', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1364px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            background: var(--card-background);
+            padding: 20px 32px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-md);
+        }
+
+        .time {
+            font-size: 3.2em;
+            font-weight: 700;
+            color: var(--primary-color);
+            letter-spacing: -1px;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .header-button {
+            background: var(--card-background);
+            color: var(--text-primary);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            padding: 12px 20px;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            font-size: 0.95em;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+        }
+
+        .card {
+            background: var(--card-background);
+            border-radius: var(--border-radius);
+            padding: 24px;
+            box-shadow: var(--shadow-md);
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .card-title {
+            font-size: 1.4em;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .status-box {
+            background: var(--background-color);
+            padding: 24px;
+            border-radius: var(--border-radius);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .status-box h3 {
+            font-size: 1.2em;
+            color: var(--text-primary);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .status-item:last-child {
+            border-bottom: none;
+        }
+
+        .status-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .status-value {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .door-status {
+            display: none;
+        }
+
+        .status-item .door-icon {
+            margin-right: 8px;
+            color: var(--primary-color);
+        }
+
+        .expiration-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-height: 132px;
+            overflow-y: auto;
+            padding-right: 8px;
+            margin-bottom: 24px;
+        }
+
+        .expiration-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .expiration-list::-webkit-scrollbar-track {
+            background: var(--background-color);
+            border-radius: 3px;
+        }
+
+        .expiration-list::-webkit-scrollbar-thumb {
+            background: var(--scroll-color);
+            border-radius: 3px;
+            opacity: 0.8;
+        }
+
+        .expiration-list::-webkit-scrollbar-thumb:hover {
+            opacity: 1;
+        }
+
+        .expiration-item {
+            background: var(--background-color);
+            border-radius: var(--border-radius);
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .expiration-item:hover {
+            transform: translateX(4px);
+            background: rgba(33, 150, 243, 0.05);
+        }
+
+        .expiration-danger {
+            color: var(--danger-color);
+            font-weight: 600;
+        }
+
+        .expiration-warning {
+            color: var(--warning-color);
+            font-weight: 600;
+        }
+
+        .expiration-safe {
+            color: var(--success-color);
+            font-weight: 600;
+        }
+
+        /* 모드 제어 관련 스타일 */
+        .mode-control-card {
+            background: var(--card-background);
+            border-radius: var(--border-radius);
+            padding: 24px;
+            margin-top: auto;
+        }
+
+        .mode-status {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background: var(--background-color);
+            border-radius: var(--border-radius);
+            margin-bottom: 20px;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .mode-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .mode-button {
+            flex: 1;
+            padding: 12px 24px;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .mode-button.active {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+        }
+
+        .mode-button:not(.active) {
+            background: var(--background-color);
+            color: var(--text-primary);
+        }
+
+        .mode-button:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .device-controls {
+            display: none;
+            margin-top: 20px;
+            padding: 16px;
+            background: var(--background-color);
+            border-radius: var(--border-radius);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .device-button {
+            width: calc(23% - 9px);
+            /* 4개의 버튼이 한 줄에 들어가도록 설정 */
+            display: inline-block;
+            padding: 8px;
+            margin-right: 12px;
+            border-radius: var(--border-radius);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            font-weight: 600;
+            font-size: 0.85em;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .device-button i {
+            font-size: 1.2em;
+            margin-bottom: 4px;
+        }
+
+        .device-button.on {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .device-button.off {
+            background: var(--background-color);
+            color: var(--text-primary);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .device-button:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        @media (max-width: 768px) {
+            .device-button {
+                width: calc(50% - 6px);
+                margin-bottom: 12px;
+            }
+
+            .device-button:nth-child(2n) {
+                margin-right: 0;
+            }
+
+            .content {
+                grid-template-columns: 1fr;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            .header-buttons {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .status-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .mode-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="time" id="currentTime">17:46</div>
+            <div class="header-buttons">
+                <button class="header-button" onclick="location.href='/products'">
+                    <i class="fas fa-box"></i>상품관리
+                </button>
+                <button class="header-button" onclick="location.href='/recommendation'">
+                    <i class="fas fa-utensils"></i>레시피
+                </button>
+                <button class="header-button" onclick="location.href='/oder'">
+                    <i class="fas fa-shopping-cart"></i>상품주문
+                </button>
+                <button class="header-button" onclick="location.href='/profile'">
+                    <i class="fas fa-user"></i>프로필
+                </button>
+            </div>
+        </header>
+
+        <div class="content">
+            <!-- 첫 번째 카드: 냉장고 상태 -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-thermometer-half" style="color: var(--primary-color); font-size: 1.4em;"></i>
+                    <h2 class="card-title">냉장고 상태</h2>
+                </div>
+                <div class="status-grid">
+                    <div class="status-box">
+                        <h3>
+                            <i class="fas fa-thermometer-half" style="color: var(--primary-color)"></i>
+                            냉장실
+                        </h3>
+                        <div class="status-item">
+                            <span class="status-label">
+                                <i class="fas fa-thermometer-half"></i>온도
+                            </span>
+                            <span id="cold_temperature" class="status-value">4.0°C</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">
+                                <i class="fas fa-tint"></i>습도
+                            </span>
+                            <span id="cold_humidity" class="status-value">70.0%</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">
+                                <i class="fas fa-wind"></i>유해가스
+                            </span>
+                            <span id="cold_gas" class="status-value">0.0ppm</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">
+                                <i class="fas fa-door-closed"></i>문 상태
+                            </span>
+                            <span id="cold_door" class="status-value">닫힘</span>
+                        </div>
+                    </div>
+                    <div class="status-box">
+                        <h3>
+                            <i class="far fa-snowflake" style="color: var(--primary-color)"></i>
+                            냉동실
+                        </h3>
+                        <div class="status-item">
+                            <span class="status-label">
+                                <i class="far fa-snowflake"></i>온도
+                            </span>
+                            <span id="frozen_temperature" class="status-value">-20.0°C</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">
+                                <i class="fas fa-tint"></i>습도
+                            </span>
+                            <span id="frozen_humidity" class="status-value">3.0%</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">
+                                <i class="fas fa-wind"></i>유해가스
+                            </span>
+                            <span id="frozen_gas" class="status-value">0.0ppm</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">
+                                <i class="fas fa-door-closed"></i>문 상태
+                            </span>
+                            <span id="frozen_door" class="status-value">닫힘</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 두 번째 카드: 유통기한 임박 상품 -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-exclamation-circle" style="color: var(--warning-color); font-size: 1.4em;"></i>
+                    <h2 class="card-title">유통기한 임박 상품</h2>
+                </div>
+                <ul class="expiration-list" id="expirationList">
+                    <!-- 동적으로 데이터가 로드됨 -->
+                </ul>
+
+                <div class="mode-control-card">
+                    <div class="card-header">
+                        <i class="fas fa-cog" style="color: var(--text-secondary); font-size: 1.4em;"></i>
+                        <h2 class="card-title">냉장고 모드 제어</h2>
+                    </div>
+                    <div class="mode-status">
+                        <span class="status-label">
+                            <i class="fas fa-sliders-h"></i>현재 모드
+                        </span>
+                        <span id="currentMode" class="status-value">자동</span>
+                    </div>
+                    <div class="mode-buttons">
+                        <button id="autoMode" class="mode-button active" onclick="changeMode('auto')">
+                            <i class="fas fa-robot"></i> 자동 모드
+                        </button>
+                        <button id="manualMode" class="mode-button" onclick="changeMode('manual')">
+                            <i class="fas fa-hand-paper"></i> 수동 모드
+                        </button>
+                    </div>
+                    <div id="deviceControls" class="device-controls">
+                        <button id="cold_fan" class="device-button off" onclick="toggleDevice('cold_fan')">
+                            <i class="fas fa-fan"></i>냉장 팬
+                        </button>
+                        <button id="frozen_fan" class="device-button off" onclick="toggleDevice('frozen_fan')">
+                            <i class="fas fa-fan"></i>냉동 팬
+                        </button>
+                        <button id="cold_uv" class="device-button off" onclick="toggleDevice('cold_uv')">
+                            <i class="fas fa-lightbulb"></i>냉장 UV
+                        </button>
+                        <button id="frozen_uv" class="device-button off" onclick="toggleDevice('frozen_uv')">
+                            <i class="fas fa-lightbulb"></i>냉동 UV
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SERVER_IP = "192.168.0.106";  // 서버 IP 주소
+        const HTTP_PORT = 3000;
+        let currentMode = 'auto';
+        const devices = {
+            cold_fan: false,
+            frozen_fan: false,
+            cold_uv: false,
+            frozen_uv: false
+        };
+
+        // 시간 업데이트 함수
+        function updateTime() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('currentTime').textContent = `${hours}:${minutes}`;
+        }
+
+
+
+        function updateDoorStatus() {
+            fetch(`/api/door`)  // URL 수정
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // 냉장실 문 상태 업데이트
+                    const coldDoorEl = document.getElementById('cold_door');
+                    const coldDoorIcon = coldDoorEl.parentElement.querySelector('.fas');
+                    if (data.cold_door) {
+                        coldDoorEl.textContent = data.cold_door;
+                        coldDoorIcon.className = `fas ${data.cold_door === '열림' ? 'fa-door-open' : 'fa-door-closed'}`;
+                    }
+
+                    // 냉동실 문 상태 업데이트
+                    const frozenDoorEl = document.getElementById('frozen_door');
+                    const frozenDoorIcon = frozenDoorEl.parentElement.querySelector('.fas');
+                    if (data.frozen_door) {
+                        frozenDoorEl.textContent = data.frozen_door;
+                        frozenDoorIcon.className = `fas ${data.frozen_door === '열림' ? 'fa-door-open' : 'fa-door-closed'}`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Door status update error:', error);
+                    document.getElementById('cold_door').textContent = 'Error';
+                    document.getElementById('frozen_door').textContent = 'Error';
+                });
+        }
+
+
+
+        // 모드 변경 함수 수정
+async function changeMode(mode) {
+    // UI를 먼저 변경
+    const previousMode = currentMode;
+    currentMode = mode;
+    updateModeDisplay();
+
+    try {
+        console.log('Requesting mode change to:', mode);
+        const response = await fetch(`http://${SERVER_IP}:${HTTP_PORT}/mode/${mode}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+        });
+
+        const data = await response.json();
+        console.log('Server response:', data);
+
+        if (!data.success) {
+            // 서버 요청이 실패하면 이전 상태로 롤백
+            throw new Error(data.error || '모드 변경 실패');
+        }
+    } catch (error) {
+        console.error('모드 변경 오류:', error);
+        // 에러 발생 시 이전 상태로 UI 복구
+        currentMode = previousMode;
+        updateModeDisplay();
+        alert(`모드 변경에 실패했습니다: ${error.message}`);
+    }
+}
+
+// 모드 디스플레이 업데이트 함수 수정
+function updateModeDisplay() {
+    const deviceControls = document.getElementById('deviceControls');
+    const autoButton = document.getElementById('autoMode');
+    const manualButton = document.getElementById('manualMode');
+    const currentModeDisplay = document.getElementById('currentMode');
+
+    // 모드에 따른 텍스트 및 스타일 업데이트
+    currentModeDisplay.textContent = currentMode === 'auto' ? '자동' : '수동';
+    
+    if (currentMode === 'manual') {
+        // 수동 모드 UI 변경
+        deviceControls.style.display = 'block';
+        autoButton.classList.remove('active');
+        manualButton.classList.add('active');
+        
+        // 모든 버튼 활성화
+        const buttons = deviceControls.querySelectorAll('.device-button');
+        buttons.forEach(button => {
+            button.disabled = false;
+            button.style.opacity = '1';
+            button.style.cursor = 'pointer';
+        });
+    } else {
+        // 자동 모드 UI 변경
+        deviceControls.style.display = 'none';
+        autoButton.classList.add('active');
+        manualButton.classList.remove('active');
+        
+        // 모든 장치 상태 초기화
+        Object.keys(devices).forEach(device => {
+            devices[device] = false;
+            updateDeviceButton(device);
+        });
+    }
+
+    // 모드 버튼에 transition 효과 추가
+    autoButton.style.transition = 'all 0.3s ease';
+    manualButton.style.transition = 'all 0.3s ease';
+}
+
+        // 모드 디스플레이 업데이트
+        function updateModeDisplay() {
+            const deviceControls = document.getElementById('deviceControls');
+            const autoButton = document.getElementById('autoMode');
+            const manualButton = document.getElementById('manualMode');
+            const currentModeDisplay = document.getElementById('currentMode');
+
+            currentModeDisplay.textContent = currentMode === 'auto' ? '자동' : '수동';
+
+            if (currentMode === 'manual') {
+                deviceControls.style.display = 'block';
+                autoButton.classList.remove('active');
+                manualButton.classList.add('active');
+                console.log('수동 모드로 전환됨');
+            } else {
+                deviceControls.style.display = 'none';
+                autoButton.classList.add('active');
+                manualButton.classList.remove('active');
+                console.log('자동 모드로 전환됨');
+
+                // 모든 장치 상태 초기화
+                Object.keys(devices).forEach(device => {
+                    devices[device] = false;
+                    updateDeviceButton(device);
+                });
+            }
+        }
+
+        // 장치 토글 함수
+        // 장치 토글 함수 수정
+async function toggleDevice(device) {
+    if (currentMode !== 'manual') return;
+
+    // UI를 먼저 업데이트
+    const previousState = devices[device];
+    devices[device] = !devices[device];
+    updateDeviceButton(device);
+
+    try {
+        const action = devices[device] ? 'ON' : 'OFF';
+        const response = await fetch(`http://${SERVER_IP}:${HTTP_PORT}/device/${device}/${action}`);
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || '장치 제어 실패');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        // 실패 시 이전 상태로 복구
+        devices[device] = previousState;
+        updateDeviceButton(device);
+        alert(`장치 제어에 실패했습니다: ${error.message}`);
+    }
+}
+
+        // 장치 버튼 업데이트
+        function updateDeviceButton(device) {
+            const button = document.getElementById(device);
+            if (devices[device]) {
+                button.classList.remove('off');
+                button.classList.add('on');
+                // 아이콘과 텍스트 유지, 상태만 변경
+                button.querySelector('i').style.color = 'white';
+            } else {
+                button.classList.remove('on');
+                button.classList.add('off');
+                button.querySelector('i').style.color = 'var(--text-primary)';
+            }
+        }
+
+        // 장치 이름 변환
+        function getDeviceName(device) {
+            const names = {
+                cold_fan: '냉장고 쿨링팬',
+                frozen_fan: '냉동고 쿨링팬',
+                cold_uv: '냉장고 UV 살균등',
+                frozen_uv: '냉동고 UV 살균등'
+            };
+            return names[device] || device;
+        }
+
+        // 유통기한 임박 상품 가져오기 함수
+        function fetchExpirationProducts() {
+            fetch(`/api/expiration-products`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const list = document.getElementById('expirationList');
+                    list.innerHTML = '';
+
+                    // 2주(14일) 이내 상품만 필터링
+                    const filteredData = data.filter(product => product.days_remaining <= 14);
+
+                    if (!filteredData || filteredData.length === 0) {
+                        const emptyState = document.createElement('div');
+                        emptyState.className = 'empty-state';
+                        emptyState.innerHTML = `
+                    <i class="fas fa-check-circle"></i>
+                    <p>2주 이내 유통기한 임박 상품이 없습니다</p>
+                `;
+                        list.appendChild(emptyState);
+                        return;
+                    }
+
+                    filteredData.forEach(product => {
+                        const daysUntilExpiration = product.days_remaining;
+                        let colorClass = '';
+
+                        if (daysUntilExpiration <= 3) {
+                            colorClass = 'expiration-danger';
+                        } else if (daysUntilExpiration <= 7) {
+                            colorClass = 'expiration-warning';
+                        } else {
+                            colorClass = 'expiration-safe';
+                        }
+
+                        const li = document.createElement('li');
+                        li.className = 'expiration-item';
+
+                        // 제품 정보를 더 자세히 표시
+                        const productInfo = [];
+                        if (product.CLS_NM_1) productInfo.push(product.CLS_NM_1);
+                        if (product.CLS_NM_2) productInfo.push(product.CLS_NM_2);
+
+                        li.innerHTML = `
+                    <div class="product-info">
+                        <span class="product-name">${product.product_name}</span>
+                        ${productInfo.length > 0 ?
+                                `<span class="product-category">[${productInfo.join(' > ')}]</span>`
+                                : ''}
+                    </div>
+                    <span class="${colorClass}">유통기한까지 ${daysUntilExpiration}일 남음</span>
+                `;
+                        list.appendChild(li);
+                    });
+                })
+                .catch(error => {
+                    console.error('유통기한 상품 로드 오류:', error);
+                    const list = document.getElementById('expirationList');
+                    list.innerHTML = '<div class="empty-state"><p>데이터를 불러오는 중 오류가 발생했습니다.</p></div>';
+                });
+        }
+        function updateStatus() {
+            fetch(`/api/status`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Status API response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // 각 데이터가 존재하는지 확인 후 표시
+                    const updateElement = (id, value, unit) => {
+                        const element = document.getElementById(id);
+                        if (element && value !== undefined && value !== null) {
+                            element.textContent = `${parseFloat(value).toFixed(1)}${unit}`;
+                        }
+                    };
+
+                    updateElement('cold_temperature', data.cold_temperature, '°C');
+                    updateElement('cold_humidity', data.cold_humidity, '%');
+                    updateElement('cold_gas', data.cold_gas, 'ppm');
+                    updateElement('frozen_temperature', data.frozen_temperature, '°C');
+                    updateElement('frozen_humidity', data.frozen_humidity, '%');
+                    updateElement('frozen_gas', data.frozen_gas, 'ppm');
+                })
+                .catch(error => {
+                    console.error('Status update error:', error);
+                    const errorElements = [
+                        'cold_temperature', 'cold_humidity', 'cold_gas',
+                        'frozen_temperature', 'frozen_humidity', 'frozen_gas'
+                    ];
+                    errorElements.forEach(id => {
+                        const element = document.getElementById(id);
+                        if (element) {
+                            element.textContent = 'Error';
+                        }
+                    });
+                });
+        }
+        // 초기화 및 주기적 업데이트 설정
+        document.addEventListener('DOMContentLoaded', async () => {
+            updateTime();
+            fetchExpirationProducts();
+            updateStatus();
+            updateDoorStatus();
+
+            // 현재 모드 가져오기
+            try {
+                const response = await fetch(`http://${SERVER_IP}:${HTTP_PORT}/mode`);
+                const data = await response.json();
+                currentMode = data.mode;
+                updateModeDisplay();
+            } catch (error) {
+                console.error('Error:', error);
+            }
+
+            // 주기적 업데이트 설정
+            setInterval(updateTime, 60000);
+            setInterval(fetchExpirationProducts, 300000);
+            setInterval(updateStatus, 5000);
+            setInterval(updateDoorStatus, 1000);
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,1212 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>프로필 - 영양 분석</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+
+    :root {
+      --primary-color: #2196F3;
+      --success-color: #4CAF50;
+      --warning-color: #FFC107;
+      --danger-color: #FF5252;
+      --background-color: #F8FAFC;
+      --card-background: #FFFFFF;
+      --text-primary: #1A1A1A;
+      --text-secondary: #666666;
+      --border-radius: 16px;
+      --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+      --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body,
+    html {
+      font-family: 'Pretendard', sans-serif;
+      background-color: var(--background-color);
+      color: var(--text-primary);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1364px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 32px;
+      background: var(--card-background);
+      padding: 20px 32px;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow-md);
+    }
+
+    .time {
+      font-size: 3.2em;
+      font-weight: 700;
+      color: var(--primary-color);
+      letter-spacing: -1px;
+    }
+
+    .header-button {
+      background: var(--card-background);
+      color: var(--text-primary);
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      padding: 12px 20px;
+      border-radius: var(--border-radius);
+      font-weight: 600;
+      font-size: 0.95em;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      white-space: nowrap;
+      min-width: fit-content;
+    }
+
+    .header-buttons {
+      display: flex;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .header-button:hover {
+      background: var(--primary-color);
+      color: white;
+      border-color: var(--primary-color);
+    }
+
+    .content {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 24px;
+    }
+
+    .card {
+      background: var(--card-background);
+      border-radius: var(--border-radius);
+      padding: 24px;
+      box-shadow: var(--shadow-md);
+      transition: all 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .card-title {
+      font-size: 1.4em;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .input-group {
+      margin-bottom: 20px;
+    }
+
+    .input-group label {
+      display: block;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+
+    .input-group input,
+    .input-group select {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      border-radius: var(--border-radius);
+      background: var(--card-background);
+      color: var(--text-primary);
+      font-size: 1em;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: var(--border-radius);
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    .tab-container {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .tab-button {
+      padding: 12px 20px;
+      background: var(--background-color);
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      border-radius: var(--border-radius);
+      color: var(--text-secondary);
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .tab-button.active {
+      background: var(--primary-color);
+      color: white;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .search-box {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .search-box input {
+      flex: 1;
+      padding: 12px;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      border-radius: var(--border-radius);
+      background: var(--background-color);
+    }
+
+    .search-box button {
+      padding: 12px 24px;
+      white-space: nowrap;
+      width: auto;
+    }
+
+    .result-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .result-item {
+      background: var(--background-color);
+      border-radius: var(--border-radius);
+      padding: 20px;
+      transition: all 0.2s ease;
+      border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .result-item:hover {
+      transform: translateX(4px);
+      background: rgba(33, 150, 243, 0.05);
+    }
+
+    .nutrition-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .nutrition-item {
+      background: var(--background-color);
+      padding: 16px;
+      border-radius: var(--border-radius);
+      border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .chart-container {
+      width: 100%;
+      height: 300px;
+      margin-bottom: 24px;
+    }
+
+    .product-info-section {
+      margin-bottom: 15px;
+    }
+
+    .product-info-section h4 {
+      margin: 10px 0 5px 0;
+      font-size: 1em;
+    }
+
+    .allergens-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 5px;
+    }
+
+    .allergen-tag {
+      background: rgba(255, 87, 87, 0.1);
+      color: #FF5757;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.9em;
+    }
+
+    .ingredients-info {
+      line-height: 1.5;
+      white-space: pre-wrap;
+    }
+
+    .nutrition-info {
+      background: rgba(0, 0, 0, 0.02);
+      padding: 12px;
+      border-radius: 6px;
+      white-space: pre-wrap;
+    }
+
+    .intake-button {
+      display: none;
+      width: auto;
+      padding: 8px 16px;
+      margin-left: 10px;
+      background-color: var(--success-color);
+    }
+
+    .reset-button {
+      width: auto;
+      padding: 6px 12px;
+      font-size: 0.9em;
+      background-color: var(--warning-color);
+      opacity: 0.8;
+      border-radius: 20px;
+      margin-bottom: 16px;
+      transition: all 0.2s ease;
+    }
+
+    .reset-button:hover {
+      opacity: 1;
+      transform: translateY(-2px);
+    }
+
+    .daily-total {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: var(--background-color);
+      border-radius: var(--border-radius);
+    }
+
+    .recommendation-list {
+      margin-top: 20px;
+    }
+
+    .recommendation-item {
+      padding: 10px;
+      margin: 5px 0;
+      background-color: var(--background-color);
+      border-radius: 8px;
+    }
+
+    .quantity-control {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: fit-content;
+    }
+
+    .quantity-input {
+      width: 60px !important;
+      text-align: center;
+      padding: 8px !important;
+      border-radius: 8px;
+    }
+
+    .quantity-apply {
+      width: auto !important;
+      padding: 8px 16px !important;
+      font-size: 0.9em;
+    }
+
+    /* 소비패턴 네비게이션 스타일 */
+    .consumption-nav {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+      background: var(--background-color);
+      padding: 8px;
+      border-radius: var(--border-radius);
+    }
+
+    .consumption-tab-button {
+      flex: 1;
+      padding: 12px 24px;
+      background: transparent;
+      border: none;
+      border-radius: var(--border-radius);
+      color: var(--text-secondary);
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .consumption-tab-button.active {
+      background: var(--primary-color);
+      color: white;
+    }
+
+    /* 차트 카드 스타일 */
+    .chart-card,
+    .quantity-card {
+      background: var(--card-background);
+      border-radius: var(--border-radius);
+      padding: 24px;
+      box-shadow: var(--shadow-md);
+      margin-bottom: 24px;
+    }
+
+    .chart-header,
+    .quantity-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .chart-period select,
+    .quantity-filter input {
+      padding: 8px 16px;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      border-radius: var(--border-radius);
+      background: var(--background-color);
+      color: var(--text-primary);
+      font-size: 0.9em;
+    }
+
+    /* 차트 요약 정보 스타일 */
+    .chart-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-top: 24px;
+      padding-top: 24px;
+      border-top: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .summary-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .summary-label {
+      color: var(--text-secondary);
+      font-size: 0.9em;
+      margin-bottom: 4px;
+    }
+
+    .summary-value {
+      font-size: 1.5em;
+      font-weight: 700;
+      color: var(--primary-color);
+    }
+
+    /* 수량 목록 스타일 */
+    .quantity-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .quantity-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px;
+      background: var(--background-color);
+      border-radius: var(--border-radius);
+      transition: all 0.2s ease;
+    }
+
+    .quantity-item:hover {
+      transform: translateX(4px);
+      background: rgba(33, 150, 243, 0.05);
+    }
+
+    .quantity-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .quantity-name {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .quantity-details {
+      font-size: 0.9em;
+      color: var(--text-secondary);
+    }
+
+    .consumption-view {
+      display: none;
+    }
+
+    .consumption-view.active {
+      display: block;
+    }
+
+    @media (max-width: 768px) {
+      .content {
+        grid-template-columns: 1fr;
+      }
+
+      .header {
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .header-buttons {
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="time" id="currentTime">17:46</div>
+      <div class="header-buttons">
+        <div class="header-buttons">
+          <button class="header-button" onclick="location.href='/home'">
+            <i class="fas fa-home"></i>메인
+          </button>
+          <button class="header-button" onclick="location.href='/products'">
+            <i class="fas fa-box"></i>상품관리
+          </button>
+          <button class="header-button" onclick="location.href='/oder'">
+            <i class="fas fa-shopping-cart"></i>상품주문
+          </button>
+          <button class="header-button" onclick="location.href='/recommendation'">
+            <i class="fas fa-utensils"></i>레시피
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <div class="content">
+      <!-- 왼쪽 패널: 개인정보 -->
+      <div class="card">
+        <div class="card-header">
+          <i class="fas fa-user"></i>
+          <h2 class="card-title">개인정보</h2>
+        </div>
+        <div class="profile-info">
+          <div class="input-group">
+            <label>나이</label>
+            <input type="number" id="age" min="15" placeholder="나이를 입력하세요">
+          </div>
+          <div class="input-group">
+            <label>성별</label>
+            <select id="gender">
+              <option value="male">남성</option>
+              <option value="female">여성</option>
+            </select>
+          </div>
+          <button id="updateProfile">
+            <i class="fas fa-save"></i> 정보 저장
+          </button>
+        </div>
+      </div>
+
+      <!-- 오른쪽 패널: 탭 컨텐츠 -->
+      <div class="card">
+        <div class="tab-container">
+          <button class="tab-button active" data-tab="nutrition-search">
+            <i class="fas fa-search"></i> 영양성분 검색
+          </button>
+          <button class="tab-button" data-tab="daily-analysis">
+            <i class="fas fa-chart-line"></i> 일일 분석
+          </button>
+          <button class="tab-button" data-tab="consumption-pattern">
+            <i class="fas fa-chart-pie"></i> 나의 소비패턴
+          </button>
+        </div>
+
+        <!-- 영양성분 검색 탭 -->
+        <div class="tab-content active" id="nutrition-search">
+          <div class="search-box">
+            <input type="text" id="foodSearchInput" placeholder="음식명을 입력하세요">
+            <button id="foodSearchButton">
+              <i class="fas fa-search"></i> 검색
+            </button>
+          </div>
+          <div class="result-list" id="nutritionResults">
+            <div class="result-item">음식명을 입력하고 검색해주세요.</div>
+          </div>
+        </div>
+
+        <!-- 일일 분석 탭 -->
+        <div class="tab-content" id="daily-analysis">
+          <div class="chart-container">
+            <canvas id="nutritionChart"></canvas>
+          </div>
+          <div class="result-list" id="analysisResults">
+            <div class="result-item">개인정보를 입력하면 영양섭취 기준이 표시됩니다.</div>
+          </div>
+        </div>
+
+        <!-- 소비패턴 탭 -->
+        <div class="tab-content" id="consumption-pattern">
+          <div class="consumption-nav">
+            <button class="consumption-tab-button active" data-view="statistics">
+              <i class="fas fa-chart-pie"></i> 통계
+            </button>
+            <button class="consumption-tab-button" data-view="quantity">
+              <i class="fas fa-list"></i> 수량
+            </button>
+          </div>
+
+          <!-- 통계 뷰 -->
+          <div class="consumption-view active" id="statistics-view">
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3>소비 패턴 분석</h3>
+                <div class="chart-period">
+                  <select id="chartPeriod">
+                    <option value="week">최근 1주일</option>
+                    <option value="month" selected>최근 1개월</option>
+                    <option value="3months">최근 3개월</option>
+                  </select>
+                </div>
+              </div>
+              <div class="chart-container">
+                <canvas id="consumptionChart"></canvas>
+              </div>
+              <div class="chart-summary">
+                <div class="summary-item">
+                  <span class="summary-label">총 소비 제품</span>
+                  <span class="summary-value" id="totalProducts">0개</span>
+                </div>
+                <div class="summary-item">
+                  <span class="summary-label">월평균 소비량</span>
+                  <span class="summary-value" id="monthlyAverage">0개</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 수량 뷰 -->
+          <div class="consumption-view" id="quantity-view">
+            <div class="quantity-card">
+              <div class="quantity-header">
+                <h3>제품별 소비 현황</h3>
+                <div class="quantity-filter">
+                  <input type="text" id="productFilter" placeholder="제품명 검색...">
+                </div>
+              </div>
+              <div class="quantity-list" id="topProducts">
+                <!-- 동적으로 추가될 제품 목록 -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <script>
+          // 전역 변수 선언
+          let dailyIntake = {
+            foods: [],
+            totals: {
+              열량: 0,
+              탄수화물: 0,
+              단백질: 0,
+              지방: 0,
+              당류: 0,
+              나트륨: 0
+            }
+          };
+
+          // 시간 업데이트 함수
+          function updateTime() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('currentTime').textContent = `${hours}:${minutes}`;
+          }
+
+          // 초기 시간 설정 및 주기적 업데이트
+          updateTime();
+          setInterval(updateTime, 60000);
+
+          // 영양성분 검색 함수
+          async function searchNutrition(foodName) {
+            try {
+              const response = await fetch(`/api/nutrition/search?name=${encodeURIComponent(foodName)}`);
+              if (!response.ok) {
+                throw new Error('검색 중 오류가 발생했습니다.');
+              }
+              const data = await response.json();
+              return data;
+            } catch (error) {
+              console.error('영양성분 검색 오류:', error);
+              throw error;
+            }
+          }
+
+          // 소비패턴 데이터 로드 및 표시 함수 수정
+          async function loadConsumptionData() {
+            try {
+              const response = await fetch('/api/consumption-pattern');
+              const data = await response.json();
+          
+              if (data && data.productConsumption) {
+                const activeView = document.querySelector('.consumption-view.active').id;
+                
+                if (activeView === 'statistics-view') {
+                  const ctx = document.getElementById('consumptionChart');
+                  if (window.consumptionChart instanceof Chart) {
+                    window.consumptionChart.destroy();
+                  }
+          
+                  // 제품 종류 수 계산
+                  const productCount = data.productConsumption.length;
+                  
+                  // 총 수량 계산 (월평균용)
+                  const totalQuantity = data.productConsumption.reduce((sum, item) => 
+                    sum + parseInt(item.total_quantity), 0);
+                  
+                  // 월평균 계산
+                  const monthlyAvg = totalQuantity / 
+                    (document.getElementById('chartPeriod').value === 'week' ? 0.25 : 
+                     document.getElementById('chartPeriod').value === '3months' ? 3 : 1);
+          
+                  window.consumptionChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                      labels: data.productConsumption.map(item => item.product_name),
+                      datasets: [{
+                        data: data.productConsumption.map(item => parseInt(item.total_quantity)),
+                        backgroundColor: [
+                          '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0',
+                          '#9966FF', '#FF9F40'
+                        ]
+                      }]
+                    },
+                    options: {
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: {
+                        legend: { position: 'bottom' }
+                      }
+                    }
+                  });
+          
+                  // 요약 정보 업데이트 (제품 종류 수와 월평균 소비량)
+                  document.getElementById('totalProducts').textContent = `${productCount}개`;
+                  document.getElementById('monthlyAverage').textContent = `${monthlyAvg.toFixed(1)}개`;
+          
+                } else if (activeView === 'quantity-view') {
+                  const container = document.getElementById('topProducts');
+                  container.innerHTML = '';
+                  
+                  data.productConsumption.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'quantity-item';
+                    div.innerHTML = `
+                      <div class="quantity-info">
+                        <span class="quantity-name">${item.product_name}</span>
+                        <span class="quantity-details">
+                          최근 사용: ${new Date(item.last_used || Date.now()).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <div class="quantity-stats">
+                        <span class="quantity-total">총 ${parseInt(item.total_quantity)}개</span>
+                      </div>
+                    `;
+                    container.appendChild(div);
+                  });
+                }
+              }
+            } catch (error) {
+              console.error('소비 데이터 로드 오류:', error);
+            }
+          }
+
+          // 일일 섭취 총량 업데이트 함수
+          function updateDailyTotals() {
+            dailyIntake.totals = dailyIntake.foods.reduce((acc, food) => ({
+              열량: acc.열량 + food.열량,
+              탄수화물: acc.탄수화물 + food.탄수화물,
+              단백질: acc.단백질 + food.단백질,
+              지방: acc.지방 + food.지방,
+              당류: acc.당류 + (food.당류 || 0),
+              나트륨: acc.나트륨 + (food.나트륨 || 0)
+            }), {
+              열량: 0, 탄수화물: 0, 단백질: 0, 지방: 0, 당류: 0, 나트륨: 0
+            });
+          }
+
+          // 음식 추천 함수
+          function getRecommendations(remaining, standards) {
+            const deficitRatios = {
+              열량: (remaining.열량 / standards.에너지) * 100,
+              탄수화물: (remaining.탄수화물 / (standards.단백질 * 4)) * 100,
+              단백질: (remaining.단백질 / standards.단백질) * 100,
+              지방: (remaining.지방 / (standards.단백질 * 0.3)) * 100
+            };
+
+            const sortedDeficits = Object.entries(deficitRatios)
+              .sort(([, a], [, b]) => b - a)
+              .filter(([, ratio]) => ratio > 0);
+
+            const recommendations = [];
+
+            sortedDeficits.forEach(([nutrient, ratio]) => {
+              switch (nutrient) {
+                case '단백질':
+                  if (ratio > 30) {
+                    if (remaining.열량 > 400) {
+                      recommendations.push('고단백 메인 식사 (삼겹살, 닭가슴살 구이, 연어스테이크)');
+                    } else {
+                      recommendations.push('단백질 간식 (삶은 계란, 프로틴 쉐이크, 두부샐러드)');
+                    }
+                  }
+                  break;
+                case '탄수화물':
+                  if (ratio > 30) {
+                    if (remaining.열량 > 400) {
+                      recommendations.push('건강한 탄수화물 (현미밥, 통밀빵, 고구마)');
+                    } else {
+                      recommendations.push('가벼운 탄수화물 간식 (바나나, 오트밀, 과일)');
+                    }
+                  }
+                  break;
+                case '지방':
+                  if (ratio > 30) {
+                    recommendations.push('건강한 지방 (아보카도, 견과류, 올리브오일 드레싱 샐러드)');
+                  }
+                  break;
+                case '열량':
+                  if (ratio > 40) {
+                    recommendations.push('균형 잡힌 한 끼 식사 (비빔밥, 연어덮밥, 닭가슴살 샐러드)');
+                  }
+                  break;
+              }
+            });
+
+            return recommendations.slice(0, 3);
+          }
+
+          // 일일 분석 업데이트 함수
+          async function updateDailyAnalysis() {
+            const age = document.getElementById('age').value;
+            const gender = document.getElementById('gender').value;
+
+            if (!age || !gender) {
+              alert('프로필 정보를 먼저 입력해주세요.');
+              return;
+            }
+
+            try {
+              const response = await fetch(`/api/nutrition/standard?age=${age}&gender=${gender}`);
+              const data = await response.json();
+
+              if (!data.success || !data.data) {
+                throw new Error('영양 섭취 기준을 가져올 수 없습니다.');
+              }
+
+              const standards = data.data;
+              const analysisResults = document.getElementById('analysisResults');
+
+              // 초기화 버튼 추가
+              analysisResults.innerHTML = `
+      <button class="reset-button">
+        <i class="fas fa-redo"></i> 섭취량 초기화
+      </button>
+    `;
+
+              // 초기화 버튼 이벤트
+              document.querySelector('.reset-button').addEventListener('click', () => {
+                dailyIntake.foods = [];
+                dailyIntake.totals = {
+                  열량: 0, 탄수화물: 0, 단백질: 0, 지방: 0, 당류: 0, 나트륨: 0
+                };
+                updateDailyAnalysis();
+              });
+
+              // 현재 섭취 목록 표시
+              if (dailyIntake.foods.length > 0) {
+                const intakeListDiv = document.createElement('div');
+                intakeListDiv.className = 'result-item';
+                intakeListDiv.innerHTML = `
+        <h3>오늘의 섭취 목록</h3>
+        ${dailyIntake.foods.map(food => `
+          <div style="margin: 10px 0;">
+            <strong>${food.식품명}</strong> (${food.수량}g)
+            - ${food.열량.toFixed(1)} kcal
+          </div>
+        `).join('')}
+        
+        <div class="daily-total">
+          <h4>총 섭취량</h4>
+          <div class="nutrition-grid">
+            <div class="nutrition-item">
+              <strong>열량:</strong> ${dailyIntake.totals.열량.toFixed(1)} kcal
+            </div>
+            <div class="nutrition-item">
+              <strong>탄수화물:</strong> ${dailyIntake.totals.탄수화물.toFixed(1)} g
+            </div>
+            <div class="nutrition-item">
+              <strong>단백질:</strong> ${dailyIntake.totals.단백질.toFixed(1)} g
+            </div>
+            <div class="nutrition-item">
+              <strong>지방:</strong> ${dailyIntake.totals.지방.toFixed(1)} g
+            </div>
+          </div>
+        </div>
+      `;
+                analysisResults.appendChild(intakeListDiv);
+              }
+
+              // 남은 섭취량 계산
+              const remaining = {
+                열량: standards.에너지 - dailyIntake.totals.열량,
+                탄수화물: standards.단백질 * 4 - dailyIntake.totals.탄수화물,
+                단백질: standards.단백질 - dailyIntake.totals.단백질,
+                지방: standards.단백질 * 0.3 - dailyIntake.totals.지방,
+                나트륨: standards.나트륨 - dailyIntake.totals.나트륨
+              };
+
+              // 영양 차트 업데이트
+              updateNutritionChart(standards, dailyIntake.totals);
+
+              // 추천 음식 표시
+              const recommendations = getRecommendations(remaining, standards);
+              if (recommendations.length > 0) {
+                const recommendDiv = document.createElement('div');
+                recommendDiv.className = 'result-item';
+                recommendDiv.innerHTML = `
+        <h3>추천 음식</h3>
+        <div class="recommendation-list">
+          ${recommendations.map((rec, index) => `
+            <div class="recommendation-item" style="background: rgba(33, 150, 243, ${0.1 + (index * 0.1)});">
+              <i class="fas fa-utensils"></i> ${rec}
+            </div>
+          `).join('')}
+        </div>
+      `;
+                analysisResults.appendChild(recommendDiv);
+              }
+
+            } catch (error) {
+              console.error('일일 분석 업데이트 오류:', error);
+              document.getElementById('analysisResults').innerHTML = `
+      <div class="result-item">
+        분석 중 오류가 발생했습니다: ${error.message}
+      </div>
+    `;
+            }
+          }
+
+          // 차트 업데이트 함수
+          function updateNutritionChart(standards, current) {
+            const ctx = document.getElementById('nutritionChart');
+
+            const data = {
+              labels: ['열량 (kcal/10)', '탄수화물 (g)', '단백질 (g)', '지방 (g)'],
+              datasets: [
+                {
+                  label: '권장 섭취량',
+                  data: [
+                    standards.에너지 / 10,
+                    standards.단백질 * 4,
+                    standards.단백질,
+                    standards.단백질 * 0.3
+                  ],
+                  backgroundColor: 'rgba(33, 150, 243, 0.5)',
+                  borderColor: 'rgba(33, 150, 243, 1)',
+                  borderWidth: 1
+                },
+                {
+                  label: '현재 섭취량',
+                  data: [
+                    current.열량 / 10,
+                    current.탄수화물,
+                    current.단백질,
+                    current.지방
+                  ],
+                  backgroundColor: 'rgba(76, 175, 80, 0.5)',
+                  borderColor: 'rgba(76, 175, 80, 1)',
+                  borderWidth: 1
+                }
+              ]
+            };
+
+            if (window.nutritionChart instanceof Chart) {
+              window.nutritionChart.destroy();
+            }
+
+            window.nutritionChart = new Chart(ctx, {
+              type: 'bar',
+              data: data,
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                  y: {
+                    beginAtZero: true
+                  }
+                },
+                plugins: {
+                  legend: {
+                    display: true,
+                    position: 'top'
+                  }
+                }
+              }
+            });
+          }
+
+          // 이벤트 리스너들
+          document.getElementById('foodSearchInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+              document.getElementById('foodSearchButton').click();
+            }
+          });
+
+          // 기간 선택 이벤트
+          document.getElementById('chartPeriod').addEventListener('change', loadConsumptionData);
+
+          // 제품 필터링
+          document.getElementById('productFilter').addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            document.querySelectorAll('.quantity-item').forEach(item => {
+              const productName = item.querySelector('.quantity-name').textContent.toLowerCase();
+              item.style.display = productName.includes(searchTerm) ? 'flex' : 'none';
+            });
+          });
+
+          // 탭 전환 이벤트
+          document.querySelectorAll('.tab-button').forEach(button => {
+            button.addEventListener('click', () => {
+              document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+              button.classList.add('active');
+
+              const tabId = button.getAttribute('data-tab');
+              document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+              });
+              document.getElementById(tabId).classList.add('active');
+
+              if (tabId === 'daily-analysis') {
+                updateDailyAnalysis();
+              } else if (tabId === 'consumption-pattern') {
+                loadConsumptionData();
+              }
+            });
+          });
+
+          // 소비패턴 탭 전환 이벤트
+          document.querySelectorAll('.consumption-tab-button').forEach(button => {
+            button.addEventListener('click', () => {
+              document.querySelectorAll('.consumption-tab-button')
+                .forEach(b => b.classList.remove('active'));
+              button.classList.add('active');
+
+              const viewId = button.getAttribute('data-view');
+              document.querySelectorAll('.consumption-view')
+                .forEach(view => view.classList.remove('active'));
+              document.getElementById(`${viewId}-view`).classList.add('active');
+
+              loadConsumptionData();
+            });
+          });
+
+          // 영양성분 검색 이벤트
+          document.getElementById('foodSearchButton').addEventListener('click', async () => {
+            const input = document.getElementById('foodSearchInput');
+            const resultsContainer = document.getElementById('nutritionResults');
+
+            if (!input.value.trim()) {
+              alert('음식명을 입력해주세요.');
+              return;
+            }
+
+            resultsContainer.innerHTML = '<div class="result-item">검색중...</div>';
+
+            try {
+              const { data } = await searchNutrition(input.value);
+              resultsContainer.innerHTML = '';
+
+              if (!data || data.length === 0) {
+                resultsContainer.innerHTML = '<div class="result-item">검색 결과가 없습니다.</div>';
+                return;
+              }
+
+              data.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'result-item';
+                div.innerHTML = `
+        <h3>${item.식품명}</h3>
+        <div style="display: flex; gap: 10px; align-items: center; margin: 10px 0;">
+          <div class="quantity-control">
+            <input type="number" class="quantity-input" value="100" min="1">
+            <span>g</span>
+            <button class="quantity-apply">적용</button>
+          </div>
+          <button class="intake-button" style="display: none;">
+            <i class="fas fa-plus"></i> 섭취 추가
+          </button>
+        </div>
+        <div class="nutrition-content">
+          <div class="nutrition-grid">
+            <div class="nutrition-item">
+              <strong>열량:</strong> ${item.열량.toFixed(1)} kcal
+            </div>
+            <div class="nutrition-item">
+              <strong>탄수화물:</strong> ${item.탄수화물.toFixed(1)} g
+            </div>
+            <div class="nutrition-item">
+              <strong>단백질:</strong> ${item.단백질.toFixed(1)} g
+            </div>
+            <div class="nutrition-item">
+              <strong>지방:</strong> ${item.지방.toFixed(1)} g
+            </div>
+            ${item.당류 ? `
+              <div class="nutrition-item">
+                <strong>당류:</strong> ${item.당류.toFixed(1)} g
+              </div>
+            ` : ''}
+            ${item.나트륨 ? `
+              <div class="nutrition-item">
+                <strong>나트륨:</strong> ${item.나트륨.toFixed(0)} mg
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      `;
+
+                const quantityInput = div.querySelector('.quantity-input');
+                const applyButton = div.querySelector('.quantity-apply');
+                const intakeButton = div.querySelector('.intake-button');
+                const nutritionContent = div.querySelector('.nutrition-content');
+                let currentNutrition = { ...item };
+
+                // 수량 적용 버튼 이벤트
+                applyButton.addEventListener('click', () => {
+                  const quantity = parseFloat(quantityInput.value);
+                  if (isNaN(quantity) || quantity <= 0) {
+                    alert('올바른 수량을 입력해주세요.');
+                    return;
+                  }
+
+                  const multiplier = quantity / 100;
+                  currentNutrition = {
+                    식품명: item.식품명,
+                    수량: quantity,
+                    열량: item.열량 * multiplier,
+                    탄수화물: item.탄수화물 * multiplier,
+                    단백질: item.단백질 * multiplier,
+                    지방: item.지방 * multiplier,
+                    당류: item.당류 ? item.당류 * multiplier : 0,
+                    나트륨: item.나트륨 ? item.나트륨 * multiplier : 0
+                  };
+
+                  nutritionContent.innerHTML = `
+          <div class="nutrition-grid">
+            <div class="nutrition-item">
+              <strong>열량:</strong> ${currentNutrition.열량.toFixed(1)} kcal
+            </div>
+            <div class="nutrition-item">
+              <strong>탄수화물:</strong> ${currentNutrition.탄수화물.toFixed(1)} g
+            </div>
+            <div class="nutrition-item">
+              <strong>단백질:</strong> ${currentNutrition.단백질.toFixed(1)} g
+           </div>
+           <div class="nutrition-item">
+             <strong>지방:</strong> ${currentNutrition.지방.toFixed(1)} g
+           </div>
+           ${item.당류 ? `
+             <div class="nutrition-item">
+               <strong>당류:</strong> ${currentNutrition.당류.toFixed(1)} g
+             </div>
+           ` : ''}
+           ${item.나트륨 ? `
+             <div class="nutrition-item">
+               <strong>나트륨:</strong> ${currentNutrition.나트륨.toFixed(0)} mg
+             </div>
+           ` : ''}
+         </div>
+       `;
+
+                  intakeButton.style.display = 'block';
+                });
+
+                // 섭취 추가 버튼 이벤트
+                intakeButton.addEventListener('click', () => {
+                  dailyIntake.foods.push(currentNutrition);
+                  updateDailyTotals();
+                  alert(`'${item.식품명} ${quantityInput.value}g'가 일일 섭취 목록에 추가되었습니다.`);
+                });
+
+                resultsContainer.appendChild(div);
+              });
+            } catch (error) {
+              resultsContainer.innerHTML = `
+     <div class="result-item">
+       검색 중 오류가 발생했습니다: ${error.message}
+     </div>
+   `;
+            }
+          });
+
+          // 페이지 로드 시 초기화
+          document.addEventListener('DOMContentLoaded', () => {
+            updateTime();
+            setInterval(updateTime, 60000);
+
+            loadConsumptionData();
+
+            const savedAge = localStorage.getItem('userAge');
+            const savedGender = localStorage.getItem('userGender');
+
+            if (savedAge) document.getElementById('age').value = savedAge;
+            if (savedGender) document.getElementById('gender').value = savedGender;
+
+            if (savedAge && savedGender) {
+              updateDailyAnalysis();
+            }
+          });
+        </script>
+</body>
+
+</html>

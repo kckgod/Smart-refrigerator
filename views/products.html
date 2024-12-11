@@ -1,0 +1,1350 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>식료품 목록</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+
+        :root {
+            --primary-color: #2196F3;
+            --success-color: #4CAF50;
+            --warning-color: #FFC107;
+            --danger-color: #FF5252;
+            --background-color: #F8FAFC;
+            --card-background: #FFFFFF;
+            --text-primary: #1A1A1A;
+            --text-secondary: #666666;
+            --border-radius: 16px;
+            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+            --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body,
+        html {
+            font-family: 'Pretendard', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1364px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            background: var(--card-background);
+            padding: 20px 32px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-md);
+        }
+
+        .time {
+            font-size: 3.2em;
+            font-weight: 700;
+            color: var(--primary-color);
+            letter-spacing: -1px;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .header-button {
+            background: var(--card-background);
+            color: var(--text-primary);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            padding: 12px 20px;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            font-size: 0.95em;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .header-button:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+        }
+
+        .card {
+            background: var(--card-background);
+            border-radius: var(--border-radius);
+            padding: 24px;
+            box-shadow: var(--shadow-md);
+            margin-bottom: 24px;
+        }
+
+        /* 테이블 헤더 고정을 위한 CSS 수정 */
+        .product-list-container {
+            position: relative;
+            max-height: 400px;
+            overflow: hidden;
+            /* 변경: 전체 컨테이너는 overflow 숨김 */
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            border-radius: var(--border-radius);
+        }
+
+        .table-container {
+            overflow-y: auto;
+            max-height: calc(400px - 40px);
+            /* 헤더 높이만큼 뺌 */
+        }
+
+        .search-container {
+            position: sticky;
+            top: 0;
+            background: var(--card-background);
+            padding: 16px 0;
+            margin-bottom: 16px;
+            z-index: 10;
+        }
+
+        .product-list-container table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .product-list-container thead {
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            background-color: var(--background-color);
+        }
+
+        .product-list-container th {
+            padding: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            background-color: var(--background-color);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .product-list-container td {
+            padding: 12px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 40px 12px 16px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: var(--border-radius);
+            font-size: 1em;
+            background: var(--background-color);
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+        }
+
+
+        .detail-item {
+            display: flex;
+            flex-direction: row;  /* 가로 정렬 */
+            align-items: center;
+            justify-content: flex-start;
+            gap: 12px;
+            padding: 8px;
+            margin-bottom: 4px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .detail-item:last-child {
+            border-bottom: none;
+        }
+
+        .detail-item strong {
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .detail-item span {
+            color: var(--text-primary);
+        }
+
+        /* 유통기한 상태별 스타일 */
+        .expiry-normal {
+            color: var(--success-color) !important;
+        }
+
+        .expiry-warning {
+            color: var(--warning-color) !important;
+        }
+
+        .expiry-danger {
+            color: var(--danger-color) !important;
+        }
+
+        .expiry-expired {
+            color: var(--text-secondary) !important;
+            opacity: 0.7;
+        }
+
+        .expiry-status {
+            font-size: 0.8em;
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin-left: 8px;
+        }
+
+        .status-expired {
+            background: rgba(102, 102, 102, 0.1);
+            color: var(--text-secondary);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .card-title {
+            font-size: 1.4em;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            text-align: left;
+        }
+
+        th {
+            font-weight: 600;
+            color: var(--text-secondary);
+            background-color: var(--background-color);
+        }
+
+        .product-name {
+            background: none;
+            border: none;
+            color: var(--primary-color);
+            cursor: pointer;
+            padding: 0;
+            text-align: left;
+            font-size: 1em;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .product-name:hover {
+            color: var(--text-primary);
+        }
+
+        .product-details {
+            background: var(--background-color);
+            border-radius: var(--border-radius);
+            padding: 16px;
+            margin-top: 16px;
+        }
+
+        .detail-item {
+            display: grid;
+            grid-template-columns: 2fr 1.5fr 1.5fr 80px;
+            align-items: center;
+            gap: 16px;
+            padding: 12px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .detail-item:last-child {
+            border-bottom: none;
+        }
+
+        .quantity-controller {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .quantity-input {
+            width: 60px !important;
+            text-align: center;
+            -webkit-appearance: none;
+            -moz-appearance: textfield;
+            -ms-appearance: none;
+            -o-appearance: none;
+            appearance: none;
+        }
+
+        .quantity-input::-webkit-outer-spin-button,
+        .quantity-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .quantity-input[type='number'] {
+            -moz-appearance: textfield;
+        }
+
+        .quantity-btn {
+            background: var(--background-color);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-primary);
+        }
+
+        .quantity-btn:hover {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="date"] {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: var(--border-radius);
+            background: var(--background-color);
+            color: var(--text-primary);
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px 24px;
+            border: none;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-danger {
+            background: rgba(255, 82, 82, 0.1);
+            color: var(--danger-color);
+            border: 1px solid var(--danger-color);
+            width: auto;
+            padding: 8px 12px;
+            font-size: 0.9em;
+        }
+
+        .btn-danger:hover {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 16px 24px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.3s ease;
+        }
+
+        .notification.success {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .notification.error {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .notification.warning {
+            background: var(--warning-color);
+            color: white;
+        }
+
+        .alert {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--card-background);
+            padding: 20px 40px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-lg);
+            z-index: 2000;
+            display: none;
+            animation: alertSlideIn 0.3s ease;
+            text-align: center;
+            min-width: 300px;
+        }
+
+        .alert-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--primary-color);
+        }
+
+        .alert-content {
+            font-size: 1.1em;
+            margin-bottom: 20px;
+            word-break: break-all;
+        }
+
+        .alert-button {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .alert-button:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        /* 알레르기 카드 기본 스타일 수정 */
+        .allergy-card {
+            margin-top: 16px;
+            background: var(--card-background);
+            max-height: 500px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: var(--shadow-md);
+        }
+
+        /* 검색 컨테이너 스타일 통일 */
+        .allergy-card .search-container {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            position: relative;
+        }
+
+        .allergy-card .search-input {
+            flex: 1;
+            padding: 12px 40px 12px 16px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: var(--border-radius);
+            font-size: 1em;
+            background: var(--background-color);
+        }
+
+        .allergy-card .btn-danger {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 16px;
+            border-radius: var(--border-radius);
+            font-size: 1em;
+            transition: all 0.2s ease;
+        }
+
+        .allergy-card .btn-danger:hover {
+            background: var(--primary-color);
+            opacity: 0.9;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* 검색 결과 리스트 스타일 */
+        .allergy-list {
+            max-height: 150px;
+            overflow-y: auto;
+            margin-bottom: 12px;
+            padding-right: 8px;
+        }
+
+        /* 스크롤바 스타일링 */
+        .allergy-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .allergy-list::-webkit-scrollbar-track {
+            background: rgba(33, 150, 243, 0.05);
+            border-radius: 3px;
+        }
+
+        .allergy-list::-webkit-scrollbar-thumb {
+            background: rgba(33, 150, 243, 0.2);
+            border-radius: 3px;
+        }
+
+
+        /* 검색 결과 아이템 스타일 */
+        .allergy-item {
+            padding: 12px;
+            margin: 4px 0;
+            border-radius: var(--border-radius);
+            background: var(--background-color);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(33, 150, 243, 0.1);
+        }
+
+        .allergy-item:hover {
+            background: rgba(33, 150, 243, 0.05);
+            transform: translateX(4px);
+        }
+
+
+        .item-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .item-barcode {
+            font-size: 0.85em;
+            color: var(--text-secondary);
+        }
+
+
+        .allergy-details {
+            margin-top: 12px;
+            padding: 12px;
+            background: var(--background-color);
+            border-radius: var(--border-radius);
+            border: 1px solid rgba(33, 150, 243, 0.2);
+            overflow-y: auto;
+            max-height: 250px;
+        }
+
+        .allergy-details .detail-item {
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+
+        .allergy-details .detail-label {
+            font-weight: 600;
+            color: var(--primary-color);
+            font-size: 0.9em;
+        }
+
+
+        /* 영양성분 목록 스타일 */
+        .nutrient-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            font-size: 0.9em;
+            margin-top: 4px;
+        }
+
+        .nutrient-item {
+            padding: 4px 8px;
+            background: rgba(33, 150, 243, 0.05);
+            border-radius: 4px;
+        }
+
+        /* 정보 없음 스타일 */
+        .no-data {
+            color: var(--text-secondary);
+            font-style: italic;
+            text-align: center;
+            padding: 12px;
+        }
+
+        @keyframes alertSlideIn {
+            from {
+                transform: translate(-50%, -70%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translate(-50%, -50%);
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            .header-buttons {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="time" id="currentTime">00:00</div>
+            <div class="header-buttons">
+                <button class="header-button" onclick="location.href='/home'">
+                    <i class="fas fa-home"></i>메인
+                </button>
+                <button class="header-button" onclick="location.href='/recommendation'">
+                    <i class="fas fa-utensils"></i>레시피
+                </button>
+                <button class="header-button" onclick="location.href='/oder'">
+                    <i class="fas fa-shopping-cart"></i>상품주문
+                </button>
+                <button class="header-button" onclick="location.href='/profile'">
+                    <i class="fas fa-user"></i>프로필
+                </button>
+            </div>
+        </header>
+
+        <div class="content">
+            <div class="left-section">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-box" style="color: var(--primary-color); font-size: 1.4em;"></i>
+                        <h2 class="card-title">식료품 목록</h2>
+                    </div>
+                    <div class="search-container">
+                        <input type="text" id="product-search" class="search-input" placeholder="제품 검색...">
+                        <i class="fas fa-search search-icon"></i>
+                    </div>
+                    <div class="product-list-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>제품명</th>
+                                    <th>수량</th>
+                                </tr>
+                            </thead>
+                        </table>
+                        <div class="table-container">
+                            <table>
+                                <tbody id="product-list">
+                                    <!-- 데이터가 여기에 추가됩니다 -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-info-circle" style="color: var(--primary-color); font-size: 1.4em;"></i>
+                        <h2 class="card-title">제품 상세 정보</h2>
+                    </div>
+                    <div id="product-details" class="product-details">
+                        <!-- 선택된 제품의 세부정보가 여기에 표시됩니다 -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="right-section">
+                <!-- 제품 추가 카드 -->
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-plus-circle" style="color: var(--primary-color); font-size: 1.4em;"></i>
+                        <h2 class="card-title">제품 추가</h2>
+                    </div>
+                    <input type="text" id="product-name" placeholder="제품명" required>
+                    <div class="quantity-controller" style="margin: 8px 0;">
+                        <button class="quantity-btn decrease" onclick="decreaseQuantity()">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                        <input type="number" id="product-quantity" value="1" min="1"
+                            class="quantity-input product-quantity" required>
+                        <button class="quantity-btn increase" onclick="increaseQuantity()">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                    <input type="date" id="product-expiration" required>
+                    <button id="add-product" class="btn btn-primary">추가</button>
+                </div>
+
+                <!-- 알레르기 정보 카드 -->
+                <div class="card allergy-card">
+                    <div class="card-header">
+                        <i class="fas fa-exclamation-triangle" style="color: #FF5252; font-size: 1.4em;"></i>
+                        <h2 class="card-title">알레르기 주의 제품 검색</h2>
+                    </div>
+                    <div class="search-container">
+                        <input type="text" id="allergy-search" class="search-input" placeholder="제품명을 입력하세요...">
+                        <button id="allergy-search-btn" class="btn btn-danger">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                    <div id="allergy-list" class="allergy-list">
+                        <!-- 검색 결과 리스트가 여기에 표시됩니다 -->
+                    </div>
+                    <div id="allergy-details" class="allergy-details" style="display: none;">
+                        <!-- 선택된 제품의 상세 정보가 여기에 표시됩니다 -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 제품 스캔 알림창 -->
+            <div id="scanAlert" class="alert">
+                <div class="alert-title">제품이 스캔되었습니다</div>
+                <div id="scanAlertContent" class="alert-content"></div>
+                <button class="alert-button" onclick="hideAlert()">확인</button>
+            </div>
+
+            <script>
+                let ws = null;
+                let isConnected = false;
+                let reconnectAttempts = 0;
+                const maxReconnectAttempts = 5;
+                const reconnectDelay = 3000;
+
+                function connectWebSocket() {
+                    if (isConnected) {
+                        return;
+                    }
+                    if (ws !== null) {
+                        ws.close();
+                        ws = null;
+                    }
+
+                    try {
+                        ws = new WebSocket('ws://localhost:3000');
+
+                        ws.addEventListener('open', function () {
+                            isConnected = true;
+                            reconnectAttempts = 0;
+
+                            const readyMessage = {
+                                type: 'ready',
+                                client: 'products'
+                            };
+                            ws.send(JSON.stringify(readyMessage));
+                        });
+
+                        ws.addEventListener('message', function (event) {
+                            try {
+                                const data = JSON.parse(event.data);
+                                switch (data.type) {
+                                    case 'readyConfirm':
+                                        break;
+                                    case 'barcodeResult':
+                                        handleBarcodeResult(data);
+                                        break;
+                                    default:
+                                }
+                            } catch (error) {
+                            }
+                        });
+
+                        ws.addEventListener('error', function (error) {
+                            isConnected = false;
+                            handleReconnect();
+                        });
+
+                        ws.addEventListener('close', function () {
+                            isConnected = false;
+                            handleReconnect();
+                        });
+
+                    } catch (error) {
+                        handleReconnect();
+                    }
+                }
+
+                // 제품 검색 기능
+                document.getElementById('product-search').addEventListener('input', function (e) {
+                    const searchTerm = e.target.value.toLowerCase();
+                    const rows = document.querySelectorAll('#product-list tr');
+
+                    rows.forEach(row => {
+                        const productName = row.querySelector('.product-name').textContent.toLowerCase();
+                        row.style.display = productName.includes(searchTerm) ? '' : 'none';
+                    });
+                });
+
+                // 유통기한 상태 확인 함수
+                function getExpiryStatus(expiryDate) {
+                    const now = new Date();
+                    const expiry = new Date(expiryDate);
+                    const daysUntilExpiry = Math.ceil((expiry - now) / (1000 * 60 * 60 * 24));
+
+                    if (daysUntilExpiry < 0) return 'expired';
+                    if (daysUntilExpiry <= 3) return 'danger';
+                    if (daysUntilExpiry <= 7) return 'warning';
+                    return 'normal';
+                }
+
+                function handleBarcodeResult(data) {
+                    if (data.success) {
+                        const alertContent = document.getElementById('scanAlertContent');
+                        alertContent.textContent = data.productName;
+
+                        const alert = document.getElementById('scanAlert');
+                        alert.style.display = 'block';
+
+                        document.getElementById('product-name').value = data.productName;
+
+                        const defaultExpiration = new Date();
+                        defaultExpiration.setDate(defaultExpiration.getDate() + 30);
+                        document.getElementById('product-expiration').value = defaultExpiration.toISOString().split('T')[0];
+
+                        document.getElementById('product-quantity').value = '1';
+                    } else {
+                        showNotification(data.error || '바코드 스캔에 실패했습니다', 'error');
+                    }
+                }
+
+                function hideAlert() {
+                    const alert = document.getElementById('scanAlert');
+                    alert.style.display = 'none';
+                }
+
+                function handleReconnect() {
+                    if (!isConnected && reconnectAttempts < maxReconnectAttempts) {
+                        reconnectAttempts++;
+                        console.log(`재연결 시도 ${reconnectAttempts}/${maxReconnectAttempts}`);
+                        showNotification(`재연결 시도 중... (${reconnectAttempts}/${maxReconnectAttempts})`, 'warning');
+                        setTimeout(connectWebSocket, reconnectDelay);
+                    } else if (reconnectAttempts >= maxReconnectAttempts) {
+                        console.error('최대 재연결 시도 횟수 초과');
+                        showNotification('서버 연결에 실패했습니다. 페이지를 새로고침해주세요.', 'error');
+                    }
+                }
+
+                function showNotification(message, type = 'success') {
+                    const notification = document.createElement('div');
+                    notification.className = `notification ${type}`;
+                    notification.textContent = message;
+                    document.body.appendChild(notification);
+
+                    setTimeout(() => {
+                        notification.style.opacity = '1';
+                        notification.style.transform = 'translateY(0)';
+                    }, 100);
+
+                    setTimeout(() => {
+                        notification.style.opacity = '0';
+                        notification.style.transform = 'translateY(-20px)';
+                        setTimeout(() => notification.remove(), 300);
+                    }, 3000);
+                }
+
+                function updateTime() {
+                    const now = new Date();
+                    const hours = String(now.getHours()).padStart(2, '0');
+                    const minutes = String(now.getMinutes()).padStart(2, '0');
+                    document.getElementById('currentTime').textContent = `${hours}:${minutes}`;
+                }
+
+                function updateProductList() {
+                    fetch('/api/products')
+                        .then(response => response.json())
+                        .then(data => {
+                            const productList = document.getElementById('product-list');
+                            productList.innerHTML = '';
+                            const productMap = {};
+
+                            data.forEach(product => {
+                                const name = product.product_name;
+                                if (!productMap[name]) {
+                                    productMap[name] = {
+                                        quantity: 0,
+                                        details: [],
+                                        earliestExpiry: new Date(product.expiration_date)
+                                    };
+                                }
+
+                                const productExpiry = new Date(product.expiration_date);
+                                if (productExpiry < productMap[name].earliestExpiry) {
+                                    productMap[name].earliestExpiry = productExpiry;
+                                }
+
+                                productMap[name].quantity += product.quantity;
+                                productMap[name].details.push(product);
+                            });
+
+                            for (const name in productMap) {
+                                const product = productMap[name];
+                                const row = document.createElement('tr');
+
+                                row.innerHTML = `
+                                    <td>
+                                        <button class="product-name" data-name="${name}">${name}</button>
+                                    </td>
+                                    <td>${product.quantity}</td>
+                                `;
+                                productList.appendChild(row);
+                            }
+
+                            document.querySelectorAll('.product-name').forEach(button => {
+                                button.addEventListener('click', (event) => {
+                                    document.querySelectorAll('.product-name.active').forEach(btn => {
+                                        if (btn !== event.target) {
+                                            btn.classList.remove('active');
+                                        }
+                                    });
+
+                                    const name = event.target.getAttribute('data-name');
+                                    const isCurrentlyDisplayed = event.target.classList.toggle('active');
+
+                                    if (isCurrentlyDisplayed) {
+                                        displayProductDetails(name, productMap);
+                                    } else {
+                                        hideProductDetails();
+                                    }
+                                });
+                            });
+                        })
+                        .catch(error => console.error('Error:', error));
+                }
+
+                function displayProductDetails(productName, productMap) {
+                    const productDetails = document.getElementById('product-details');
+                    productDetails.innerHTML = '';
+                
+                    const product = productMap[productName];
+                    if (product) {
+                        product.details.forEach(detail => {
+                            const detailItem = document.createElement('div');
+                            detailItem.className = 'detail-item';
+                
+                            const date = new Date(detail.expiration_date);
+                            const today = new Date();
+                            const daysRemaining = Math.ceil((date - today) / (1000 * 60 * 60 * 24));
+                            const formattedDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+                            const expiryStatus = getExpiryStatus(detail.expiration_date);
+                
+                            let remainingText = '';
+                            if (daysRemaining < 0) {
+                                remainingText = '유통기한 만료';
+                            } else if (daysRemaining === 0) {
+                                remainingText = '오늘 만료';
+                            } else {
+                                remainingText = `${daysRemaining}일 남음`;
+                            }
+
+
+                            detailItem.style.cssText = `
+                            display: flex;
+                            align-items: center;
+                            gap: 40px; // 기존 8px에서 4px로 줄임
+                            padding: 4px; // 기존 8px에서 4px로 줄임
+                        `;
+                        
+                            detailItem.innerHTML = `
+                                <div class="product-name" style="flex: 0 0 100px; margin-right: 0;">${detail.product_name}</div>
+                                <div class="quantity-wrapper" style="display: flex; align-items: center; gap: 4px; flex: 0 0 auto;">
+                                    <button class="quantity-btn decrease" data-id="${detail.id}">
+                                        <i class="fas fa-minus"></i>
+                                    </button>
+                                    <input type="number" 
+                                        value="${detail.quantity}" 
+                                        min="1" 
+                                        data-id="${detail.id}" 
+                                        class="quantity-input product-quantity"
+                                        style="width: 40px; text-align: center;">
+                                    <button class="quantity-btn increase" data-id="${detail.id}">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                                <div class="expiry-info" style="flex: 1; justify-content: center; align-items: center;">
+                                    <span class="product-date expiry-${expiryStatus}">
+                                        ${formattedDate} (${remainingText})
+                                    </span>
+                                </div>
+                                <button class="btn btn-danger" data-id="${detail.id}" style="flex: 0 0 auto;">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            `;
+
+                            // 이벤트 리스너 설정...
+                            const quantityInput = detailItem.querySelector('.quantity-input');
+                            const decreaseBtn = detailItem.querySelector('.decrease');
+                            const increaseBtn = detailItem.querySelector('.increase');
+
+                            quantityInput.addEventListener('change', (event) => {
+                                const newQuantity = parseInt(event.target.value);
+                                if (newQuantity < 1) {
+                                    event.target.value = 1;
+                                    return;
+                                }
+                                updateProductQuantity(detail.id, newQuantity, detail.product_name);
+                            });
+
+                            decreaseBtn.addEventListener('click', () => {
+                                const currentVal = parseInt(quantityInput.value);
+                                if (currentVal > 1) {
+                                    const newQuantity = currentVal - 1;
+                                    quantityInput.value = newQuantity;
+                                    updateProductQuantity(detail.id, newQuantity, detail.product_name);
+                                }
+                            });
+
+                            increaseBtn.addEventListener('click', () => {
+                                const currentVal = parseInt(quantityInput.value);
+                                const newQuantity = currentVal + 1;
+                                quantityInput.value = newQuantity;
+                                updateProductQuantity(detail.id, newQuantity, detail.product_name);
+                            });
+
+                            productDetails.appendChild(detailItem);
+                        });
+
+                        document.querySelectorAll('.btn-danger').forEach(button => {
+                            button.addEventListener('click', (event) => {
+                                const id = event.target.closest('.btn-danger').getAttribute('data-id');
+                                if (confirm('정말 삭제하시겠습니까?')) {
+                                    deleteProduct(id);
+                                }
+                            });
+                        });
+                    }
+                }
+
+                function hideProductDetails() {
+                    document.getElementById('product-details').innerHTML = '';
+                }
+
+                function updateProductQuantity(productId, newQuantity, productName) {
+                    // 수량 업데이트만 수행
+                    fetch(`/api/update-product/${productId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ quantity: newQuantity })
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log('Updated:', data);
+                            updateTotalQuantity(productName);
+                            if (newQuantity === 0) {
+                                showNotification('제품의 수량이 0이 되었습니다', 'warning');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            showNotification('수량 업데이트 중 오류가 발생했습니다.', 'error');
+                        });
+                }
+
+                function updateProductQuantityInDB(productId, newQuantity, productName) {
+                    return fetch(`/api/update-product/${productId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ quantity: newQuantity })
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log('Updated:', data);
+                            updateTotalQuantity(productName);
+                            if (newQuantity === 0) {
+                                showNotification('제품의 수량이 0이 되었습니다', 'warning');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            showNotification('수량 업데이트 중 오류가 발생했습니다.', 'error');
+                        });
+                }
+
+                function updateTotalQuantity(productName) {
+                    fetch('/api/products')
+                        .then(response => response.json())
+                        .then(data => {
+                            const productMap = {};
+                            data.forEach(product => {
+                                const name = product.product_name;
+                                if (!productMap[name]) {
+                                    productMap[name] = {
+                                        quantity: 0,
+                                        details: []
+                                    };
+                                }
+                                productMap[name].quantity += product.quantity;
+                                productMap[name].details.push(product);
+                            });
+
+                            const productRows = document.querySelectorAll('#product-list tr');
+                            productRows.forEach(row => {
+                                const nameButton = row.querySelector('.product-name');
+                                if (nameButton && nameButton.textContent === productName) {
+                                    row.querySelector('td:last-child').textContent = productMap[productName].quantity;
+                                }
+                            });
+
+                            const activeProduct = document.querySelector('.product-name.active');
+                            if (activeProduct && activeProduct.getAttribute('data-name') === productName) {
+                                displayProductDetails(productName, productMap);
+                            }
+                        })
+                        .catch(error => console.error('Error:', error));
+                }
+
+                function deleteProduct(productId) {
+                    fetch(`/api/products/${productId}`)
+                        .then(response => response.json())
+                        .then(product => {
+                            if (product.quantity > 0) {
+                                fetch('/api/log-consumption', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                    },
+                                    body: JSON.stringify({
+                                        product_id: productId,
+                                        quantity_used: product.quantity,
+                                        usage_date: new Date().toISOString()
+                                    })
+                                })
+                                    .then(response => response.json())
+                                    .then(logResult => {
+                                        return fetch(`/api/update-product/${productId}`, {
+                                            method: 'PUT',
+                                            headers: {
+                                                'Content-Type': 'application/json',
+                                            },
+                                            body: JSON.stringify({ quantity: 0 })
+                                        });
+                                    })
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        console.log('Quantity set to 0:', data);
+                                        updateProductList();
+                                        showNotification('제품 수량이 0으로 설정되었습니다', 'success');
+                                    })
+                                    .catch(error => {
+                                        console.error('Error:', error);
+                                        showNotification('제품 수량 변경 중 오류가 발생했습니다', 'error');
+                                    });
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            showNotification('제품 정보를 가져오는 중 오류가 발생했습니다.', 'error');
+                        });
+                }
+
+                function increaseQuantity() {
+                    const quantityInput = document.getElementById('product-quantity');
+                    const currentValue = parseInt(quantityInput.value) || 0;
+                    quantityInput.value = currentValue + 1;
+                }
+
+                function decreaseQuantity() {
+                    const quantityInput = document.getElementById('product-quantity');
+                    const currentValue = parseInt(quantityInput.value) || 0;
+                    if (currentValue > 1) {
+                        quantityInput.value = currentValue - 1;
+                    }
+                }
+
+                document.getElementById('add-product').addEventListener('click', function () {
+                    const productName = document.getElementById('product-name').value;
+                    const quantity = document.getElementById('product-quantity').value;
+                    const expiration = document.getElementById('product-expiration').value;
+
+                    if (!productName || !quantity || !expiration) {
+                        showNotification('모든 필드를 입력해주세요', 'error');
+                        return;
+                    }
+
+                    const productData = {
+                        product_name: productName,
+                        quantity: parseInt(quantity),
+                        expiration_date: expiration
+                    };
+
+                    fetch('/api/add-product', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(productData)
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            document.getElementById('product-name').value = '';
+                            document.getElementById('product-quantity').value = '1';
+                            document.getElementById('product-expiration').value = '';
+                            updateProductList();
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                        });
+                });
+
+                // 알레르기 정보 검색 기능
+                document.getElementById('allergy-search-btn').addEventListener('click', async function () {
+                    const productName = document.getElementById('allergy-search').value;
+                    if (!productName) {
+                        showNotification('제품명을 입력해주세요', 'warning');
+                        return;
+                    }
+
+                    const listContainer = document.getElementById('allergy-list');
+                    const detailsContainer = document.getElementById('allergy-details');
+                    listContainer.innerHTML = '<div style="text-align: center;">검색 중...</div>';
+                    detailsContainer.style.display = 'none';
+
+                    try {
+                        const response = await fetch(`/api/products/allergy?name=${encodeURIComponent(productName)}`);
+                        const { success, data, error } = await response.json();
+
+                        if (success && data.length > 0) {
+                            listContainer.innerHTML = data.map((item, index) => `
+                <div class="allergy-item" onclick='showAllergyDetails(${JSON.stringify(item).replace(/'/g, "&apos;")})'>
+                    <div class="item-name">${item.제품명}</div>
+                    <div class="item-barcode">${item.바코드 !== 'Unknown' ? `바코드: ${item.바코드}` : ''}</div>
+                </div>
+            `).join('');
+                        } else {
+                            listContainer.innerHTML = `
+                <div style="text-align: center; color: var(--danger-color);">
+                    검색 결과가 없습니다.
+                </div>
+            `;
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        listContainer.innerHTML = `
+            <div style="text-align: center; color: var(--danger-color);">
+                검색 중 오류가 발생했습니다.
+            </div>
+        `;
+                    }
+                });
+
+                function showAllergyDetails(item) {
+                    const detailsContainer = document.getElementById('allergy-details');
+                    detailsContainer.style.display = 'block';
+
+                    let nutrientInfo = item.영양성분;
+                    if (nutrientInfo !== '정보 없음') {
+                        nutrientInfo = item.영양성분.split(',')
+                            .map(n => `<div class="nutrient-item">- ${n.trim()}</div>`)
+                            .join('');
+                    }
+
+                    detailsContainer.innerHTML = `
+        <div class="detail-item">
+            <span class="detail-label">제품명</span>
+            <span>${item.제품명}</span>
+        </div>
+        ${item.바코드 !== 'Unknown' ? `
+            <div class="detail-item">
+                <span class="detail-label">바코드</span>
+                <span>${item.바코드}</span>
+            </div>
+        ` : ''}
+        <div class="detail-item">
+            <span class="detail-label">알레르기 정보</span>
+            <span>${item.알레르기정보}</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">원재료명</span>
+            <span>${item.원재료명}</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">영양성분</span>
+            <div class="nutrient-list">${nutrientInfo}</div>
+        </div>
+    `;
+                }
+
+                // Enter 키로 검색 가능하도록 설정
+                document.getElementById('allergy-search').addEventListener('keypress', function (e) {
+                    if (e.key === 'Enter') {
+                        document.getElementById('allergy-search-btn').click();
+                    }
+                });
+
+                document.addEventListener('DOMContentLoaded', function () {
+                    console.log('페이지 로드됨');
+                    connectWebSocket();
+                    updateTime();
+                    setInterval(updateTime, 60000);
+                    updateProductList();
+                });
+
+                window.addEventListener('beforeunload', function () {
+                    if (ws && ws.readyState === WebSocket.OPEN) {
+                        ws.close();
+                    }
+                });
+            </script>
+</body>
+
+</html>
